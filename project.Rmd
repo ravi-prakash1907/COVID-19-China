@@ -7,9 +7,19 @@ output:
     highlight: github
 ---
 
-<center>(A Data-Science cum Data-Mining project in R)</center>
+<center>
+
+(A **Data-Science** &amp; **Data-Mining** project for B.Sc. (H) Computer Science) <br />
+
+University Of Delhi
+
+</center>
 
 <hr /><br /><br />
+
+
+<!----------------------------------------------------------------->
+<!----------------------------------------------------------------->
 
 <font size="4">
     
@@ -25,7 +35,7 @@ This <b>Data Mining Project</b> involves a sequence of (<i>six</i>) steps i.e. <
 > <i>a) Business Understanding <br />
 > b) Data Understanding <br />
 > c) Data Preparation <br />
-> d) Modeling <br />
+> d) Modelling <br />
 > e) Evaluation <br />
 > f) Deployment </i>
 
@@ -45,10 +55,11 @@ In this project, I will be using the _**time series dataset(s)**_ that will cons
 ### [DATA PREPROCESSIG](#Data-Understanding) &amp; [POSTPROCESSING](#Data-Preparation)
 * Anomaly/Outliers - identification, verification & removal
 * Unit Scaling for Normalization
+* Identification of the type of **distribution**
 * Data Reduction
 * Exploratory Data Analysis (EDA) - using __boxplots__ & __scatter-plots__
 
-### [MODELING](#Modeling)
+### [MODELLING](#Modelling)
 * Regression
 * Model __overfitting__
 * SVMK, kNN, Linear &amp; Polynomial Regression Algorithms
@@ -67,7 +78,7 @@ In this project, I will be using the _**time series dataset(s)**_ that will cons
 > **2. [Business Understanding](#Business-Understanding)** <br />
 > **3. [Data Understanding](#Data-Understanding)** <br />
 > **4. [Data Preparation](#Data-Preparation)** <br />
-> **5. [Modeling](#Modeling)** <br />
+> **5. [Modelling](#Modelling)** <br />
 > **6. [Evaluation](#Evaluation)** <br />
 > **7. [Deployment](#Deployment)** <br />
 > **8. [Conclusion](#Conclusion)** <br />
@@ -78,7 +89,7 @@ In this project, I will be using the _**time series dataset(s)**_ that will cons
 
 <br /><hr /><br /><br />
 
-#### _Stepping into the project..._
+#### _The Problem Statement..._
 
 <center>
 <font color="#0879b1" size="5">
@@ -324,6 +335,7 @@ _Let's start with setting-up our working directory and load all the required pac
 ```{r message=FALSE, warning=FALSE, paged.print=FALSE}
 #####  Loading LIBRARIES  #####
 library(stringr)
+library(ggplot2)
 library(AUCRF)
 library(randomForest)
 library(RFmarkerDetector)
@@ -666,6 +678,135 @@ check.Confirmed[which(str_detect(check.Confirmed$Province.State, "French Guiana"
 head(check.Recovered)
 ```
 
+<br />
+**<u>Identification of the Distribution</u>**<br />
+
+```{r}
+# total cases of different catagories on the daily basis
+dailyConfirmed = apply(check.Confirmed[,5:ncol(check.Confirmed)], 2, sum)
+dailyDeaths = apply(check.Deaths[,5:ncol(check.Deaths)], 2, sum)
+dailyRecovered = apply(check.Recovered[,5:ncol(check.Recovered)], 2, sum)
+
+# active cases
+dailyActiveCases = dailyConfirmed - (dailyDeaths + dailyRecovered)
+
+# day count till March 21st
+days = 1:length(dailyConfirmed)
+```
+
+```{r}
+trendDF = data.frame(
+                Day = days,
+                Confirmed = dailyConfirmed,
+                Deaths = dailyDeaths,
+                Recovered = dailyRecovered,
+                Active.Cases = dailyActiveCases)
+head(trendDF, 5)
+```
+
+**Visualizing this trend**
+
+```{r}
+options(repr.plot.width=12, repr.plot.height=10)
+
+
+ggplot(trendDF, aes(x = Day, y = Active.Cases)) +
+    # Active cases in LIGHTBLUE
+    geom_point(color = "lightblue") +
+    geom_line(color = "lightblue") +
+
+    # Confirmed Cases - RED
+    geom_point(aes(y = Confirmed), color = "red") +
+    geom_line(aes(y = Confirmed), color = "red") +
+    # Death Cases - BLACK
+    geom_point(aes(y = Deaths), color = "black") +
+    geom_line(aes(y = Deaths), color = "black") +
+    # Recovered Cases - GREEN
+    geom_point(aes(y = Recovered), color = "green") +
+    geom_line(aes(y = Recovered), color = "green") +
+
+    labs(x="Days Count", y="Cases Count") +
+    theme_classic() +
+    theme(
+              text = element_text(family = "Gill Sans")
+              ,plot.title = element_text(size = 20, face = "bold", hjust = 0.5)
+              ,plot.subtitle = element_text(size = 25, family = "Courier", face = "bold", hjust = 0.5)
+              ,axis.text = element_text(size = 12)
+              ,axis.title = element_text(size = 20)
+      )
+
+```
+
+Here we see that all the main **three** catagories of cases have kept increasing with days!
+
+```{r}
+allConfirmed = as.numeric(check.Confirmed[,ncol(check.Confirmed)])
+allDeaths = as.numeric(check.Deaths[,ncol(check.Deaths)])
+allRecoveries = as.numeric(check.Recovered[,ncol(check.Recovered)])
+```
+
+Checking for the mean of Active Cases till **21<sup>st</sup> March**:
+
+```{r}
+# finding the mean of each catagories
+meanConfirmed = mean(allConfirmed)
+meanDeaths = mean(allDeaths)
+meanRecovered = mean(allRecoveries)
+
+meanConfirmed
+meanDeaths
+meanRecovered
+```
+
+**This indicates that:**<br />
+meanActiveCases = ${\mu}$ = `r 374.93991416309`
+
+<br />
+
+Calculating 1/${\mu}$ using following equation:<br />
+**${\lambda}$ = 1/${\mu}$**
+
+```{r}
+# once for Confirmed Cases
+lambda = 1/meanConfirmed
+lambda
+```
+
+Here we see that:<br />
+**${\lambda}$ > 0**
+<br />
+_The same thing is also true for rest of the two catagories._
+<br /><br />
+
+#### As per our studies till now:
+
+> <u>We find that- at a lot extent, the ternd follows an **Exponential Distribution**, as:</u>
+> 
+> 1. The Cases are increasing with the Days
+> 2. **${\lambda}$ > 0** etc...
+> 
+> 
+> <u>It becomes clear as we look onto the main properties of an *Exponential Distribution*:</u>
+> 
+> 1. ${\lambda}$ > 0
+> 2. mean = ${\mu}$ = 1/${\lambda}$
+> 3. x-axis (corresponding to Days) belongs to the \[ 0, ${\infty}$ \)
+> 4. y value increases with x
+
+<br />
+
+**_So, we have the data distributed <u>Exponentially</u>_**<br />
+Although, we see that trend of active cases do NOT always increase, and hence, it is not distributed exponentially:
+
+```{r}
+ggplot(trendDF, aes(x = Day, y = Active.Cases)) +
+    # Active cases in BLUE
+    geom_point(color = "blue") +
+    geom_line(color = "blue") +
+    theme_classic()
+```
+
+So, we'll have to do modelling that we wiil do later on.
 
 <br />
 
@@ -768,9 +909,8 @@ We'll use **scatter plots** & **box plots** to _identify_ and **compare the MEAN
 
 ```{r warning=FALSE}
 # Let's visualize our data to varify:
-library(ggplot2)
+options(repr.plot.width=12, repr.plot.height=10)
 
-options(repr.plot.width=14, repr.plot.height=8)
 ggplot(check.Confirmed) +
   geom_point(aes(x=check.Confirmed$Province.State, y=check.Confirmed$X1.29.20), color="red", size=2) +
   theme(
@@ -858,9 +998,8 @@ cat("New dimention: ", dim(check.Confirmed))
 
 ```{r warning=FALSE}
 # Let's visualize once more
-library(ggplot2)
+options(repr.plot.width=12, repr.plot.height=10)
 
-options(repr.plot.width=14, repr.plot.height=8)
 ggplot(check.Confirmed) +
   geom_point(aes(x=check.Confirmed$Province.State, y=check.Confirmed$X1.29.20), color="red", size=2) +
   theme(
@@ -1280,7 +1419,7 @@ Rest __7__ columns are same as those of 'Bulk' dataset
 
 ```{r}
 # Initially we plot dataset with majour Locations
-options(repr.plot.width=16, repr.plot.height=8)
+options(repr.plot.width=12, repr.plot.height=10)
 withChina<-ggplot(four, aes(x=Day, y=Confirmed, color=Day)) +
   geom_boxplot(aes(group=Day)) +
   labs(title="Including China") +
@@ -1306,7 +1445,7 @@ In order to Test our hypothesis, let's plot China alone, as well as Rest of all 
 
 
 ```{r}
-options(repr.plot.width=16, repr.plot.height=8)
+options(repr.plot.width=12, repr.plot.height=10)
 
 chinaAlone <- ggplot(four[which(str_detect(four$Location, "China", negate=F)),], aes(x=Day, y=Confirmed, color=Day)) +
   geom_point(aes(group=Day)) +
@@ -1436,7 +1575,7 @@ str(four)
 
 
 
-## **<u id="Modeling">Modeling:</u>**
+## **<u id="Modelling">Modelling:</u>**
 
 > * [EXTRACTING CHINA](#Extracting-China)
 > * [CHOOSING THE RIGHT ALGO.](#Choosing-the-Right-Algo)
@@ -1516,7 +1655,7 @@ head(region, 10)
 ```
 
 
-<center> <u><em>Now our Dataset is ready for modeling</em></u> </center>
+<center> <u><em>Now our Dataset is ready for modelling</em></u> </center>
 <br />
 
 ### <span id="Choosing-the-Right-Algo">Choosing the Right Algo.</span>
@@ -1525,7 +1664,7 @@ head(region, 10)
 # setting the theme
 theme_set(theme_classic())
 # setting plot size
-options(repr.plot.width=8, repr.plot.height=8)
+options(repr.plot.width=8, repr.plot.height=10)
 ```
 
 We are working onto a **Predictive Data Analysis** (as discussed earlier) project.<br />
@@ -2208,16 +2347,16 @@ _**So, now it's much better!**_
 
 #### **R vs R^2^**
 > #### R:
-> 1. Correlation b/w **independent** & **dependent** 
+> 1. Correlation b/w **independent** & **dependent** variables
 > 2. Varies between [-1, 1]
-> 3. Measures Linear Relation b/w 2 (x,y) quantitative var based on Direction & Strength
+> 3. Measures Linear Relation b/w 2 (x,y) quantitative var. based on Direction & Strength
 > 
 > 
 > #### R^2^:
 > 1. It's nothing other than **R**x**R**
-> 2. Correlation b/w x(independent var) & y(dependent var)
+> 2. Correlation b/w x(independent var.) & y(dependent var.)
 > 3. Varies between [0, 1]
-> 4. How close the data points are to the Regression line i.e. Goodness of fit that further means that how good/correct the predictions are.
+> 4. How **close** the data points are to the Regression line i.e. Goodness of fit that further means that how good/correct the predictions are.
 >
 > _When R^2^ becomes as close as to 1, **Predicted value** becomes **more accurate**._
 
@@ -2228,7 +2367,7 @@ _**So, now it's much better!**_
 >   * Root Mean Squared Error or
 >   * Root Mean Squared Deviation or
 >   * Standard Deviation from the Residuals
-> 2. Works on the calculation of _how far the **Actual data-points** are as compared to the **Regression Line**_.
+> 2. Works on the calculation of _how **far** the **Actual data-points** are as compared to the **Regression Line**_.
 > 
 > _**Daviation** between Predicted & Actual data points **reduces with the reduction of RMSE** value._
 
@@ -2276,7 +2415,7 @@ Prediction
 
 <font size="3">
 
-Among these **four** algorithms, our study leads us to choose the <u>Polynomial Regression</u> for modeling.
+Among these **four** algorithms, our study leads us to choose the <u>Polynomial Regression</u> for modelling.
 
 **It is so because:**
 
@@ -2375,20 +2514,20 @@ Now we ready to find the estimate of next one week's status of China about Activ
 
 
 ```{r}
-# Preparing our dataset to store next 7 days' estimate
+# Preparing our dataset to store next 8 days' estimate
 
 d = as.Date("21/01/2020", format(c("%d/%m/%Y")))
-date = as.character((c(1:7) + d), format(c("%d/%m/%Y")))
+date = as.character((c(1:8) + d), format(c("%d/%m/%Y")))
 
 finalEstimate <- data.frame(
-                             Day = 59:65,
+                             Day = 59:66,
                              Date = date
                            )
 
 ```
 
 
-Predicting the estimate for the Active Case percentage, that is likely to be on the next 1 week:
+Predicting the estimate for the Active Case percentage, that is likely to be within next 7-8 days:
 
 
 ```{r}
@@ -2397,7 +2536,7 @@ finalEstimate$"Estimated Active Case(%)" = predict(fit.plm, finalEstimate)
 
 <br />
 
-<center> <h4><u>Finally! We have estimated the possible % of Active Cases for next 7 week for China</u></h4> </center>
+<center> <h4><u>Finally! We have estimated the possible % of Active Cases for next 7-8 days for China</u></h4> </center>
 
 <br />
 
@@ -2408,14 +2547,6 @@ finalEstimate$"Estimated Active Case(%)" = predict(fit.plm, finalEstimate)
 finalEstimate
 ```
 <!--  ------------------------------------------------  -->
-
-
-<br />
-
-#### As per the sources, we can verify that -
-
-On **25 March**: Hubei lift the lockdown outside of Wuhan that was the most affected state in the whole China.
-And on 8^th^ April the total lockdown will be removed. [[source]](https://en.wikipedia.org/wiki/2020_Hubei_lockdowns)
 
 
 
@@ -2435,28 +2566,25 @@ And on 8^th^ April the total lockdown will be removed. [[source]](https://en.wik
 
 <font size="3">
 
-<u>So by this whole analysis, we come to a conclusion that</u>:
+#### <u>So by this whole analysis, we arrive at the conclusion that</u>:
 
-1. there will be a little increase in  the new cases
-2. by the end of this week, rate of new confirmed cases will decrease in China
-3. after there the rate of Active Cases(%) will decrease more rapidly i.e. China will attain the control over the COVID-19 in it's provinces
-</font>
+> * By the <u>end of March, 2020</u> (on 28^th^ March), China will no longer have to worry a lot for new cases
+> * China <u>should focus on taking the precautions</u> in most sensitive areas in order to ensure no new COVID-19 case.
+> * They are <u>__NOT__ likely to report any __wide range__ of new cases</u> by the end of March
+> * China <u>should focus more on the __treatement__</u> of the current patients
+> * China is __good to lift the lockdown__ from it's locked provinces, <u>after March</u>.
 
+#### <u>As per the sources, we can witnessed that -</u>
 
-<font size="3">
+> * __25^th^ March:__ <u>Hubei lift the lockdown outside of Wuhan</u> that was the most affected state in the whole China.
+> * China __started attempts to lift the lockdown__ by 28^th^-29^th^ March [[The Guardian]](https://www.theguardian.com/world/2020/mar/31/china-gets-mixed-results-in-its-attempt-to-lift-lockdown)
+> * __8^th^ April:__ China <u>lift __76 days'__ lockdown</u> from Wuhan. [[source]](https://en.wikipedia.org/wiki/2020_Hubei_lockdowns)
 
-Hence, now <u>China</u> should start to focus on:
-
-1. taking precautions in most sensitive areas in order to ensure no new COVID-19 case.
-2. should focus even more to maintain the current status, else new cases might increase again within a few days
-3. the majors, that the country has taken till date, should be followed more strictly, for a few more days
+<br />
 
 Now, a far more COVID-19 cases are closing as compared to those that are being reported, newly.<br />
 It is supposed to decrease even more if China focused onto the precautions.
 
-<br /><br />
-
-By the end of this week, the cure of infected patient will prove to be more beneficial than construction even more hospitals/isolation centres etc.
 </font>
 
 
@@ -2494,9 +2622,6 @@ By the end of this week, the cure of infected patient will prove to be more bene
 
 
 <br /><hr /><hr /><br /><br />
-
-
-
 
 
 
