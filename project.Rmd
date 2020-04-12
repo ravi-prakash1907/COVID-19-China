@@ -2516,7 +2516,7 @@ Now we ready to find the estimate of next one week's status of China about Activ
 ```{r}
 # Preparing our dataset to store next 8 days' estimate
 
-d = as.Date("21/01/2020", format(c("%d/%m/%Y")))
+d = as.Date("21/03/2020", format(c("%d/%m/%Y")))
 date = as.character((c(1:8) + d), format(c("%d/%m/%Y")))
 
 finalEstimate <- data.frame(
