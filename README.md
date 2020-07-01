@@ -1,6 +1,6 @@
 # COVID-19 in China
-In April 2020, [**Ravi Prakash**](https://raviprakashravi/) has published a research paper, entitled [**Predicting the Rate of Growth of the Novel Corona Virus 2020**](https://www.researchtrend.net/ijet/current_issue_ijet.php?taxonomy-id=77), through _International Journal on Emerging Technologies (IJET)_ i.e. indexed by Scopus. It is a data-science research. <br />
-_(the paper can be downloaded either by clicking the title of the same, above or by clicking_ [_here_](https://github.com/ravi-prakash1907/COVID-19-China/edit/master/publication/)_)_ <br /><br />
+In April 2020, [**Ravi Prakash**](https://raviprakashravi/) has published a research paper, entitled [**Predicting the Rate of Growth of the Novel Corona Virus 2020**](https://www.researchtrend.net/ijet/current_issue_ijet.php?taxonomy-id=77), through _International Journal on Emerging Technologies (IJET)_ i.e. indexed by Scopus. It is a data-science research work. <br />
+_(the paper can either be downloaded from the journal's website by clicking above at it's title or by clicking_ [_here_](https://github.com/ravi-prakash1907/COVID-19-China/edit/master/publication/)_)_ <br /><br />
 
 This repository is based on a data-science based research work, where I have given a mathematical model to estimate the growth rate of the novel Coronavirus in China. <br />
 Here the status of the cases in mainland of China within 7-8 days from March 21<sup>st</sup> are predicted. <br />
